@@ -12,37 +12,31 @@ public partial class MainMenu : UserControl
 {
     public event EventHandler? StartGameRequested;
 
-    private DispatcherTimer _matrixTimer = new();
-    private DispatcherTimer _scanTimer = new();
-    private List<MatrixColumn> _matrixColumns = new();
+    private DispatcherTimer _animationTimer = new();
+    private List<MatrixColumn> _columns = new();
     private Random _random = new();
 
     private class MatrixColumn
     {
-        public List<TextBlock> Characters = new();
         public double X;
         public double Speed;
         public int Length;
-        public int CurrentIndex;
+        public double Position;
+        public string[] Characters = Array.Empty<string>();
         public bool IsActive;
     }
 
     public MainMenu()
     {
         InitializeComponent();
-        _matrixTimer.Interval = TimeSpan.FromMilliseconds(50);
-        _matrixTimer.Tick += MatrixTimer_Tick;
-
-        _scanTimer.Interval = TimeSpan.FromMilliseconds(16);
-        _scanTimer.Tick += ScanTimer_Tick;
-
+        _animationTimer.Interval = TimeSpan.FromMilliseconds(100); // Much slower update rate
+        _animationTimer.Tick += AnimationTimer_Tick;
         Loaded += OnLoaded;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        InitializeMatrixRain();
-        CreateHexagonalPattern();
+        InitializeSimpleMatrix();
         StartAnimations();
     }
 
@@ -50,271 +44,160 @@ public partial class MainMenu : UserControl
     {
         if (e.PreviousSize.Width != 0 && e.PreviousSize.Height != 0)
         {
-            ReinitializeMatrixRain();
+            ReinitializeMatrix();
         }
     }
 
-    private void InitializeMatrixRain()
+    private void InitializeSimpleMatrix()
     {
-        MatrixCanvas.Children.Clear();
-        _matrixColumns.Clear();
+        MatrixColumns.Items.Clear();
+        _columns.Clear();
 
         if (ActualWidth <= 0 || ActualHeight <= 0) return;
 
-        var columnWidth = 12; // Much tighter spacing
-        var columnCount = (int)(ActualWidth / columnWidth) + 5;
+        // Create only a few columns for better performance
+        var columnWidth = 50; // Much wider spacing
+        var columnCount = Math.Max(5, (int)(ActualWidth / columnWidth));
 
         for (int i = 0; i < columnCount; i++)
         {
             var column = new MatrixColumn
             {
                 X = i * columnWidth,
-                Speed = _random.Next(30, 150),
-                Length = _random.Next(15, 35),
-                IsActive = _random.NextDouble() > 0.4 // More active columns
+                Speed = _random.Next(1, 4), // Much slower
+                Length = _random.Next(8, 15),
+                Position = _random.Next(0, (int)ActualHeight),
+                IsActive = _random.NextDouble() > 0.6
             };
 
+            // Pre-generate characters for this column
+            column.Characters = new string[column.Length];
             for (int j = 0; j < column.Length; j++)
             {
-                var textBlock = new TextBlock
-                {
-                    Text = GetRandomMatrixCharacter(),
-                    Foreground = GetMatrixBrush(j, column.Length),
-                    FontFamily = new FontFamily("Consolas"),
-                    FontSize = _random.Next(9, 13),
-                    Opacity = 0
-                };
-
-                Canvas.SetLeft(textBlock, column.X);
-                Canvas.SetTop(textBlock, -100 - (j * 16));
-
-                column.Characters.Add(textBlock);
-                MatrixCanvas.Children.Add(textBlock);
+                column.Characters[j] = GetRandomChar();
             }
 
-            _matrixColumns.Add(column);
+            CreateColumnVisual(column);
+            _columns.Add(column);
         }
     }
 
-    private string GetRandomMatrixCharacter()
+    private void CreateColumnVisual(MatrixColumn column)
     {
-        var characters = new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-                                "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-                                "ア", "イ", "ウ", "エ", "オ", "カ", "キ", "ク", "ケ", "コ",
-                                "サ", "シ", "ス", "セ", "ソ", "タ", "チ", "ツ", "テ", "ト",
-                                "ナ", "ニ", "ヌ", "ネ", "ノ", "ハ", "ヒ", "フ", "ヘ", "ホ"};
-        return characters[_random.Next(characters.Length)];
-    }
-
-    private void ReinitializeMatrixRain()
-    {
-        _matrixTimer.Stop();
-        InitializeMatrixRain();
-        CreateHexagonalPattern();
-        _matrixTimer.Start();
-    }
-
-    private void CreateHexagonalPattern()
-    {
-        HexPatternCanvas.Children.Clear();
-
-        if (ActualWidth <= 0 || ActualHeight <= 0) return;
-
-        var hexSize = 30;
-        var hexSpacing = hexSize * 1.8;
-
-        for (double y = -hexSize; y < ActualHeight + hexSize; y += hexSpacing * 0.75)
+        var stackPanel = new StackPanel
         {
-            for (double x = -hexSize; x < ActualWidth + hexSize; x += hexSpacing)
+            Orientation = Orientation.Vertical,
+            Background = Brushes.Transparent
+        };
+
+        for (int i = 0; i < column.Length; i++)
+        {
+            var textBlock = new TextBlock
             {
-                var offsetX = ((int)(y / (hexSpacing * 0.75)) % 2) * (hexSpacing * 0.5);
-
-                var hexagon = CreateHexagon(hexSize);
-                Canvas.SetLeft(hexagon, x + offsetX);
-                Canvas.SetTop(hexagon, y);
-                HexPatternCanvas.Children.Add(hexagon);
-            }
+                Text = column.Characters[i],
+                Foreground = GetMatrixBrush(i),
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 12,
+                TextAlignment = TextAlignment.Center,
+                Width = 20,
+                Margin = new Thickness(0, 2, 0, 0)
+            };
+            stackPanel.Children.Add(textBlock);
         }
+
+        Canvas.SetLeft(stackPanel, column.X);
+        Canvas.SetTop(stackPanel, column.Position);
+        stackPanel.Opacity = column.IsActive ? 0.8 : 0.2;
+
+        MatrixColumns.Items.Add(stackPanel);
     }
 
-    private Polygon CreateHexagon(double size)
+    private string GetRandomChar()
     {
-        var hexagon = new Polygon();
-        var points = new PointCollection();
-
-        for (int i = 0; i < 6; i++)
-        {
-            var angle = i * Math.PI / 3;
-            var x = size * Math.Cos(angle);
-            var y = size * Math.Sin(angle);
-            points.Add(new Point(x, y));
-        }
-
-        hexagon.Points = points;
-        hexagon.Stroke = new SolidColorBrush(Color.FromArgb(30, 0, 255, 65));
-        hexagon.StrokeThickness = 1;
-        hexagon.Fill = new SolidColorBrush(Color.FromArgb(5, 0, 255, 65));
-
-        return hexagon;
+        var chars = new[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                           "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+                           "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
+        return chars[_random.Next(chars.Length)];
     }
 
-    private Brush GetMatrixBrush(int index, int totalLength)
+    private Brush GetMatrixBrush(int index)
     {
-        byte opacity;
+        if (index == 0)
+            return new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)); // White head
+        else if (index < 3)
+            return new SolidColorBrush(Color.FromArgb(200, 0, 255, 65)); // Bright green
+        else
+            return new SolidColorBrush(Color.FromArgb((byte)(150 - index * 10), 0, (byte)(200 - index * 15), 45)); // Fade
+    }
 
-        if (index == 0) // Head of the column - black flash
-        {
-            opacity = 255;
-            return new SolidColorBrush(Color.FromArgb(opacity, 0, 0, 0));
-        }
-        else if (index == 1) // Second character - brightest green
-        {
-            opacity = 255;
-            return new SolidColorBrush(Color.FromArgb(opacity, 0, 255, 65));
-        }
-        else if (index < 4) // Near head - bright green
-        {
-            opacity = (byte)(220 - (index * 25));
-            return new SolidColorBrush(Color.FromArgb(opacity, 0, 255, 65));
-        }
-        else if (index < 8) // Mid section - medium green
-        {
-            opacity = (byte)(180 - (index * 15));
-            return new SolidColorBrush(Color.FromArgb(opacity, 0, (byte)(220 - index * 10), 50));
-        }
-        else // Tail - fade to darker green
-        {
-            opacity = (byte)Math.Max(20, 150 - (index * 12));
-            return new SolidColorBrush(Color.FromArgb(opacity, 0, (byte)(180 - index * 8), 40));
-        }
+    private void ReinitializeMatrix()
+    {
+        _animationTimer.Stop();
+        InitializeSimpleMatrix();
+        _animationTimer.Start();
     }
 
     private void StartAnimations()
     {
-        _matrixTimer.Start();
-        _scanTimer.Start();
+        _animationTimer.Start();
 
-        // Title pulse animation
+        // Simple scanning line animation
+        var scanAnimation = new DoubleAnimation
+        {
+            From = -10,
+            To = ActualWidth + 10,
+            Duration = TimeSpan.FromSeconds(4),
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        ScanTransform.BeginAnimation(TranslateTransform.XProperty, scanAnimation);
+
+        // Simple title pulse
         var titlePulse = new DoubleAnimation
         {
-            From = 0.7,
+            From = 0.8,
             To = 1.0,
             Duration = TimeSpan.FromSeconds(2),
             AutoReverse = true,
             RepeatBehavior = RepeatBehavior.Forever
         };
         TitleText.BeginAnimation(OpacityProperty, titlePulse);
-
-        // Button glow animation
-        var buttonGlow = new DoubleAnimation
-        {
-            From = 20,
-            To = 35,
-            Duration = TimeSpan.FromSeconds(1.5),
-            AutoReverse = true,
-            RepeatBehavior = RepeatBehavior.Forever
-        };
-        if (StartButton.Effect is DropShadowEffect buttonEffect)
-        {
-            buttonEffect.BeginAnimation(DropShadowEffect.BlurRadiusProperty, buttonGlow);
-        }
     }
 
-    private void MatrixTimer_Tick(object? sender, EventArgs e)
+    private void AnimationTimer_Tick(object? sender, EventArgs e)
     {
-        foreach (var column in _matrixColumns)
+        // Very simple animation - just move columns down slowly
+        for (int i = 0; i < _columns.Count && i < MatrixColumns.Items.Count; i++)
         {
-            if (!column.IsActive && _random.NextDouble() > 0.98)
+            var column = _columns[i];
+            if (MatrixColumns.Items[i] is StackPanel stackPanel)
             {
-                column.IsActive = true;
-                column.CurrentIndex = 0;
+                var currentTop = Canvas.GetTop(stackPanel);
+                var newTop = currentTop + column.Speed;
 
-                // Randomly change some characters
-                for (int i = 0; i < column.Characters.Count; i++)
+                if (newTop > ActualHeight)
                 {
-                    if (_random.NextDouble() > 0.5)
+                    newTop = -stackPanel.ActualHeight;
+                    // Randomly change some characters
+                    if (_random.NextDouble() > 0.7)
                     {
-                        column.Characters[i].Text = GetRandomMatrixCharacter();
-                    }
-                }
-            }
-
-            if (column.IsActive)
-            {
-                // Move existing characters down
-                for (int i = 0; i < column.Characters.Count; i++)
-                {
-                    var textBlock = column.Characters[i];
-                    var currentTop = Canvas.GetTop(textBlock);
-                    var newTop = currentTop + (column.Speed * 0.05);
-
-                    Canvas.SetTop(textBlock, newTop);
-
-                    // Fade in/out logic
-                    if (newTop > -50 && newTop < ActualHeight + 50)
-                    {
-                        var distanceFromHead = Math.Abs(i - column.CurrentIndex);
-                        if (distanceFromHead < 3)
+                        for (int j = 0; j < stackPanel.Children.Count; j++)
                         {
-                            textBlock.Opacity = Math.Max(0.3, 1.0 - (distanceFromHead * 0.3));
-                        }
-                        else
-                        {
-                            textBlock.Opacity = Math.Max(0, textBlock.Opacity - 0.02);
+                            if (stackPanel.Children[j] is TextBlock tb && _random.NextDouble() > 0.8)
+                            {
+                                tb.Text = GetRandomChar();
+                            }
                         }
                     }
-                    else
-                    {
-                        textBlock.Opacity = 0;
-                    }
-
-                    // Reset when off screen
-                    if (newTop > ActualHeight + 100)
-                    {
-                        Canvas.SetTop(textBlock, -100 - (i * 20));
-                        textBlock.Opacity = 0;
-                    }
                 }
 
-                column.CurrentIndex++;
-                if (column.CurrentIndex > column.Length + 10)
-                {
-                    column.IsActive = false;
-                    column.CurrentIndex = 0;
-                }
+                Canvas.SetTop(stackPanel, newTop);
             }
         }
-    }
-
-    private double _scanPosition1 = 0;
-    private double _scanPosition2 = 0;
-
-    private void ScanTimer_Tick(object? sender, EventArgs e)
-    {
-        if (ActualWidth <= 0) return;
-
-        // First scan line
-        _scanPosition1 += 2;
-        if (_scanPosition1 > ActualWidth + 10)
-        {
-            _scanPosition1 = -10;
-        }
-        ScanTransform1.X = _scanPosition1;
-
-        // Second scan line (slower)
-        _scanPosition2 += 1.2;
-        if (_scanPosition2 > ActualWidth + 5)
-        {
-            _scanPosition2 = -5;
-        }
-        ScanTransform2.X = _scanPosition2;
     }
 
     private void StartButton_Click(object sender, RoutedEventArgs e)
     {
-        _matrixTimer.Stop();
-        _scanTimer.Stop();
+        _animationTimer.Stop();
         StartGameRequested?.Invoke(this, EventArgs.Empty);
     }
 }

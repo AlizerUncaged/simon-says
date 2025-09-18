@@ -3,20 +3,24 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Background="Black" x:Name="MainMenuGrid" SizeChanged="MainMenuGrid_SizeChanged">
 
-        <!-- Matrix Rain Background Canvas -->
-        <Canvas x:Name="MatrixCanvas" ClipToBounds="True"/>
+        <!-- Simple Matrix Background -->
+        <Rectangle x:Name="MatrixBackground" Fill="Black"/>
 
-        <!-- Additional Background Layer - Hexagonal Pattern -->
-        <Canvas x:Name="HexPatternCanvas" ClipToBounds="True" Opacity="0.1">
-        </Canvas>
+        <!-- Animated Matrix Columns (simplified) -->
+        <ItemsControl x:Name="MatrixColumns">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
 
         <!-- Overlay with main content -->
         <Grid>
             <Grid.Background>
-                <RadialGradientBrush Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
+                <RadialGradientBrush Center="0.5,0.5" RadiusX="0.8" RadiusY="0.8">
                     <GradientStop Color="#00000000" Offset="0"/>
-                    <GradientStop Color="#00000040" Offset="0.6"/>
-                    <GradientStop Color="#00000090" Offset="1"/>
+                    <GradientStop Color="#00000060" Offset="1"/>
                 </RadialGradientBrush>
             </Grid.Background>
 
@@ -66,17 +70,11 @@
                 </Button>
             </StackPanel>
 
-            <!-- Scanning lines -->
-            <Rectangle x:Name="ScanLine1" Width="2" Fill="#00FF4160"
+            <!-- Simple scanning line -->
+            <Rectangle x:Name="ScanLine" Width="2" Fill="#00FF4160"
                        HorizontalAlignment="Left" VerticalAlignment="Stretch">
                 <Rectangle.RenderTransform>
-                    <TranslateTransform x:Name="ScanTransform1"/>
-                </Rectangle.RenderTransform>
-            </Rectangle>
-            <Rectangle x:Name="ScanLine2" Width="1" Fill="#00FF4130"
-                       HorizontalAlignment="Left" VerticalAlignment="Stretch">
-                <Rectangle.RenderTransform>
-                    <TranslateTransform x:Name="ScanTransform2"/>
+                    <TranslateTransform x:Name="ScanTransform"/>
                 </Rectangle.RenderTransform>
             </Rectangle>
         </Grid>

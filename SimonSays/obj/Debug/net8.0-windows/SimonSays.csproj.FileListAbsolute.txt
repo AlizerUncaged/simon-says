@@ -22,3 +22,4 @@ C:\Users\floyd\RiderProjects\SimonSays\SimonSays\obj\Debug\net8.0-windows\GameWi
 C:\Users\floyd\RiderProjects\SimonSays\SimonSays\obj\Debug\net8.0-windows\GameWindow.g.cs
 C:\Users\floyd\RiderProjects\SimonSays\SimonSays\obj\Debug\net8.0-windows\MainMenu.baml
 C:\Users\floyd\RiderProjects\SimonSays\SimonSays\obj\Debug\net8.0-windows\MainMenu.g.cs
+C:\Users\floyd\RiderProjects\SimonSays\SimonSays\obj\Debug\net8.0-windows\SimonSays.sourcelink.json
