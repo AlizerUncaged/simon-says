@@ -1,0 +1,266 @@
+<UserControl x:Class="SimonSays.GameWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <Style x:Key="GameButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1a1a1a"/>
+            <Setter Property="BorderBrush" Value="#00ff41"/>
+            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="Foreground" Value="#00ff41"/>
+            <Setter Property="FontFamily" Value="Segoe UI Black"/>
+            <Setter Property="FontSize" Value="48"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#00ff41" BlurRadius="8" ShadowDepth="0" Opacity="0.6"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#00ff4120"/>
+                    <Setter Property="RenderTransform">
+                        <Setter.Value>
+                            <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect Color="#00ff41" BlurRadius="15" ShadowDepth="0" Opacity="0.9"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#00ff4140"/>
+                    <Setter Property="RenderTransform">
+                        <Setter.Value>
+                            <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CenterBoxStyle" TargetType="Border">
+            <Setter Property="Background" Value="#0d0d0d"/>
+            <Setter Property="BorderBrush" Value="#00ff41"/>
+            <Setter Property="BorderThickness" Value="4"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#00ff41" BlurRadius="20" ShadowDepth="0" Opacity="0.7"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <Storyboard x:Key="SlideInFromTop">
+            <ThicknessAnimation Storyboard.TargetProperty="Margin" Duration="0:0:0.6">
+                <ThicknessAnimation.EasingFunction>
+                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                </ThicknessAnimation.EasingFunction>
+            </ThicknessAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4"/>
+        </Storyboard>
+
+        <Storyboard x:Key="SlideInFromBottom">
+            <ThicknessAnimation Storyboard.TargetProperty="Margin" Duration="0:0:0.6">
+                <ThicknessAnimation.EasingFunction>
+                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                </ThicknessAnimation.EasingFunction>
+            </ThicknessAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4"/>
+        </Storyboard>
+
+        <Storyboard x:Key="SlideInFromLeft">
+            <ThicknessAnimation Storyboard.TargetProperty="Margin" Duration="0:0:0.6">
+                <ThicknessAnimation.EasingFunction>
+                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                </ThicknessAnimation.EasingFunction>
+            </ThicknessAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4"/>
+        </Storyboard>
+
+        <Storyboard x:Key="SlideInFromRight">
+            <ThicknessAnimation Storyboard.TargetProperty="Margin" Duration="0:0:0.6">
+                <ThicknessAnimation.EasingFunction>
+                    <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
+                </ThicknessAnimation.EasingFunction>
+            </ThicknessAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.4"/>
+        </Storyboard>
+
+        <Storyboard x:Key="FailureShakeAnimation">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)" Duration="0:0:0.6">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.1" Value="15"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.2" Value="-15"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.3" Value="10"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="-10"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="5"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.6" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <ColorAnimation Storyboard.TargetProperty="Background.Color" From="Black" To="#ff0000" Duration="0:0:0.15" AutoReverse="True"/>
+        </Storyboard>
+
+        <Storyboard x:Key="CharacterFlashAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleX)" From="0.5" To="1.0" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <BounceEase EasingMode="EaseOut" Bounces="1"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleY)" From="0.5" To="1.0" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <BounceEase EasingMode="EaseOut" Bounces="1"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <Storyboard x:Key="GridFloatAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)"
+                           From="0" To="50" Duration="0:0:20" AutoReverse="True"/>
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                           From="0" To="50" Duration="0:0:25" AutoReverse="True"/>
+        </Storyboard>
+
+        <Style x:Key="GridLineStyle" TargetType="Line">
+            <Setter Property="Stroke" Value="#00ff4115"/>
+            <Setter Property="StrokeThickness" Value="1"/>
+        </Style>
+
+        <Storyboard x:Key="ParticleFloat" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                           From="800" To="-100" Duration="0:0:8"/>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Duration="0:0:8">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="0.7"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:5.6" Value="0.4"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:8" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+
+        <Storyboard x:Key="StatusTextPulse" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="Effect.BlurRadius"
+                           From="8" To="12" Duration="0:0:1.5" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <Storyboard x:Key="CenterBoxPulse" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="Effect.BlurRadius"
+                           From="20" To="30" Duration="0:0:2" AutoReverse="True">
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid Background="Black" x:Name="MainGameGrid">
+        <Grid.RenderTransform>
+            <TranslateTransform/>
+        </Grid.RenderTransform>
+
+        <!-- Dynamic Grid Background -->
+        <Canvas x:Name="GridCanvas" ClipToBounds="True" Opacity="0.4">
+            <Canvas.RenderTransform>
+                <TranslateTransform/>
+            </Canvas.RenderTransform>
+        </Canvas>
+
+        <!-- Floating Particles -->
+        <Canvas x:Name="ParticleCanvas" ClipToBounds="True" Opacity="0.6">
+        </Canvas>
+
+        <!-- Circuit Board Pattern -->
+        <Canvas x:Name="CircuitCanvas" ClipToBounds="True" Opacity="0.2">
+        </Canvas>
+
+        <!-- Main Game Container -->
+        <Viewbox Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid Width="800" Height="600">
+
+                <!-- Center Game Box -->
+                <Border x:Name="CenterBox" Style="{StaticResource CenterBoxStyle}"
+                        Width="150" Height="150"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border.RenderTransform>
+                        <ScaleTransform/>
+                    </Border.RenderTransform>
+                    <TextBlock x:Name="CenterText" Text=""
+                              FontSize="64" FontWeight="Black" FontFamily="Segoe UI Black"
+                              Foreground="#00ff41"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              TextAlignment="Center">
+                        <TextBlock.RenderTransform>
+                            <ScaleTransform/>
+                        </TextBlock.RenderTransform>
+                        <TextBlock.Effect>
+                            <DropShadowEffect Color="#00ff41" BlurRadius="12" ShadowDepth="0" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </Border>
+
+                <!-- Top Choice Buttons Container -->
+                <StackPanel x:Name="TopChoicesPanel" Orientation="Horizontal"
+                           HorizontalAlignment="Center" VerticalAlignment="Top"
+                           Margin="0,20,0,0" Visibility="Collapsed">
+                </StackPanel>
+
+                <!-- Bottom Choice Buttons Container -->
+                <StackPanel x:Name="BottomChoicesPanel" Orientation="Horizontal"
+                           HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                           Margin="0,0,0,20" Visibility="Collapsed">
+                </StackPanel>
+
+                <!-- Left Choice Buttons Container -->
+                <StackPanel x:Name="LeftChoicesPanel" Orientation="Vertical"
+                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                           Margin="20,0,0,0" Visibility="Collapsed">
+                </StackPanel>
+
+                <!-- Right Choice Buttons Container -->
+                <StackPanel x:Name="RightChoicesPanel" Orientation="Vertical"
+                           HorizontalAlignment="Right" VerticalAlignment="Center"
+                           Margin="0,0,20,0" Visibility="Collapsed">
+                </StackPanel>
+
+            </Grid>
+        </Viewbox>
+
+        <!-- Status Text -->
+        <TextBlock x:Name="StatusText" Text="GET READY..."
+                  FontSize="28" FontWeight="Bold" FontFamily="Segoe UI Black"
+                  Foreground="#00ff41"
+                  HorizontalAlignment="Center" VerticalAlignment="Top"
+                  Margin="0,30,0,0" TextAlignment="Center">
+            <TextBlock.Effect>
+                <DropShadowEffect Color="#00ff41" BlurRadius="10" ShadowDepth="0" Opacity="0.6"/>
+            </TextBlock.Effect>
+        </TextBlock>
+
+        <!-- Back Button -->
+        <Button x:Name="BackButton" Content="◀ BACK TO MENU"
+               FontSize="18" FontWeight="Bold" FontFamily="Segoe UI"
+               Foreground="#00ff41" Background="#1a1a1a"
+               BorderBrush="#00ff41" BorderThickness="2"
+               Padding="15,8"
+               HorizontalAlignment="Left" VerticalAlignment="Top"
+               Margin="30,30,0,0" Cursor="Hand"
+               Click="BackButton_Click">
+            <Button.Effect>
+                <DropShadowEffect Color="#00ff41" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
+            </Button.Effect>
+        </Button>
+    </Grid>
+</UserControl>
