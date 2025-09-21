@@ -12,7 +12,7 @@ public partial class GameWindow : UserControl
 {
     public event EventHandler? BackToMenuRequested;
 
-    public static readonly List<string> Words = new() { "WELCOME", "123HI", "CYBERPUNK", "MATRIX", "ALGORITHM", "SEQUENCE" };
+    public static readonly List<string> Words = new() { "Circuit", "Machine", "Robotics", "Logic", "Cyberspace", "Escape", "Protocol", "Encryption", "Metaverse", "Megabyte", "Cyborg", "Network", "Malware" };
 
     private string _currentWord = "";
     private int _currentLetterIndex = 0;
@@ -22,6 +22,9 @@ public partial class GameWindow : UserControl
     private bool _gameActive = false;
     private List<Button> _choiceButtons = new();
     private DispatcherTimer _particleTimer = new();
+    private int _currentLevel = 1;
+    private int _maxLevels = 3;
+    private bool _gameCompleted = false;
 
     public GameWindow()
     {
@@ -319,7 +322,7 @@ public partial class GameWindow : UserControl
         _currentLetterIndex = 0;
         _gameActive = false;
 
-        StatusText.Text = "MEMORIZE THE SEQUENCE...";
+        StatusText.Text = $"LEVEL {_currentLevel} - MEMORIZE THE SEQUENCE...";
         CenterText.Text = "";
         HideAllChoices();
 
@@ -355,7 +358,7 @@ public partial class GameWindow : UserControl
     {
         _uniqueLetters = _currentWord.Distinct().ToList();
         _gameActive = true;
-        StatusText.Text = $"CLICK THE LETTERS IN ORDER: {_currentWord}";
+        StatusText.Text = $"LEVEL {_currentLevel} - CLICK THE LETTERS IN ORDER: {_currentWord}";
 
         ClearChoiceButtons();
         CreateChoiceButtons();
@@ -501,9 +504,18 @@ public partial class GameWindow : UserControl
 
             if (_currentLetterIndex >= _currentWord.Length)
             {
-                StatusText.Text = "SUCCESS! NEXT SEQUENCE...";
-                _gameActive = false;
-                Task.Delay(2000).ContinueWith(_ => Dispatcher.Invoke(StartGame));
+                _currentLevel++;
+
+                if (_currentLevel > _maxLevels)
+                {
+                    ShowCompletionScreen();
+                }
+                else
+                {
+                    StatusText.Text = $"LEVEL {_currentLevel - 1} COMPLETE! NEXT LEVEL...";
+                    _gameActive = false;
+                    Task.Delay(2000).ContinueWith(_ => Dispatcher.Invoke(StartGame));
+                }
             }
         }
         else
@@ -515,7 +527,8 @@ public partial class GameWindow : UserControl
     private void ShowFailureAnimation()
     {
         _gameActive = false;
-        StatusText.Text = "SEQUENCE BREACH! RESTARTING...";
+        StatusText.Text = "SEQUENCE BREACH! RESTARTING LEVEL...";
+        _currentLevel = 1;
 
         var failShake = Resources["FailureShakeAnimation"] as Storyboard;
         if (failShake != null)
@@ -538,8 +551,56 @@ public partial class GameWindow : UserControl
         Task.Delay(2000).ContinueWith(_ => Dispatcher.Invoke(StartGame));
     }
 
+    private void ShowCompletionScreen()
+    {
+        _gameCompleted = true;
+        _gameActive = false;
+        HideAllChoices();
+
+        StatusText.Text = "SYSTEM ACCESS GRANTED";
+        CenterText.Text = "You have passed the test.\nYou may proceed to the next Room.";
+        CenterText.FontSize = 24;
+        CenterText.TextAlignment = TextAlignment.Center;
+
+        // Add completion animation
+        var completionAnimation = new DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = TimeSpan.FromSeconds(1),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+
+        var scaleAnimation = new DoubleAnimation
+        {
+            From = 0.5,
+            To = 1,
+            Duration = TimeSpan.FromSeconds(1),
+            EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut }
+        };
+
+        var scaleTransform = new ScaleTransform();
+        CenterText.RenderTransform = scaleTransform;
+        CenterText.RenderTransformOrigin = new Point(0.5, 0.5);
+
+        CenterText.BeginAnimation(UIElement.OpacityProperty, completionAnimation);
+        scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+        scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+
+        // Return to menu after 5 seconds
+        Task.Delay(5000).ContinueWith(_ => Dispatcher.Invoke(() =>
+        {
+            _gameCompleted = false;
+            _currentLevel = 1;
+            CenterText.FontSize = 48;
+            BackToMenuRequested?.Invoke(this, EventArgs.Empty);
+        }));
+    }
+
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
+        _currentLevel = 1;
+        _gameCompleted = false;
         BackToMenuRequested?.Invoke(this, EventArgs.Empty);
     }
 }
