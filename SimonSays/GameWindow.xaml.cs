@@ -358,7 +358,7 @@ public partial class GameWindow : UserControl
     {
         _uniqueLetters = _currentWord.Distinct().ToList();
         _gameActive = true;
-        StatusText.Text = $"LEVEL {_currentLevel} - CLICK THE LETTERS IN ORDER: {_currentWord}";
+        StatusText.Text = $"LEVEL {_currentLevel} - CLICK THE LETTERS IN ORDER";
 
         ClearChoiceButtons();
         CreateChoiceButtons();
